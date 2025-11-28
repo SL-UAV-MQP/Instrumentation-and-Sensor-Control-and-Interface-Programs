@@ -2,7 +2,17 @@ clc; clear; close all;
 
 Unit = "MHz";
 
+Dwell_Time = 50;
+
+Frequency_Resolution = 1;
+
 Step_Over = 25;
+
+SPECAN_Average_Count = 100;
+
+Trace_Number = 1;
+
+Command_Display_Enable = 1;
 
 Set_One_Start = 750;
 Set_One_End = 775;
@@ -37,6 +47,8 @@ if(Set_Four(end) ~= Set_Four_End)
    Set_Four(end) = Set_Four_End;
 end
 
+Full_Test_Set = [Set_One, Set_Two, Set_Three, Set_Four];
+
 %% Initalization Step
 disp("Initalizing Connection to Keysight N9310A RF Signal Generator...");
 
@@ -44,31 +56,47 @@ disp("Initalizing Connection to Keysight N9310A RF Signal Generator...");
 %N9310A_ADDR.Terminator = "LF";
 
     %Spec Ann Ident Check
-disp("*IDN?")
+if(Command_Display_Enable == 1)
+    disp("*IDN?")
+end
 fprintf("%s\n\r", "Test IDEN")
 
 disp("Testing Command Interface Connection...")
 pause(0.5)
 
-disp(":SYSTEM:DISPLAY: WHITE");
-pause(2)
-disp(":SYSTEM:DISPLAY: BLUE");
-pause(2)
-disp(":SYSTEM:DISPLAY: GREEN");
-pause(2)
-disp(":SYSTEM:DISPLAY: WHITE");
+if(Command_Display_Enable == 1)
+    disp(":SYSTEM:DISPLAY: WHITE");
+end
+pause(1)
+if(Command_Display_Enable == 1)
+    disp(":SYSTEM:DISPLAY: BLUE");
+end
+pause(1)
+if(Command_Display_Enable == 1)
+    disp(":SYSTEM:DISPLAY: GREEN");
+end
+pause(1)
+if(Command_Display_Enable == 1)
+    disp(":SYSTEM:DISPLAY: WHITE");
+end
 pause(1)
 
-Confirm_Commands_N9310A = input("Did the Keysight N9310A RF Signal Generator display cycle from White, Blue, Green, White? [Y/N] ", "s");
+Confirm_Commands_N9310A = input("Did the Keysight N9310A RF Signal Generator display color cycle White -> Blue -> Green -> White? [Y/N] ", "s");
 if(strcmp(Confirm_Commands_N9310A,"Y"))
-    disp("*RST")
+    if(Command_Display_Enable == 1)
+        disp("*RST")
+    end
     disp("Keysight N9310A RF Signal Generator System Reset to Factory Defaults.")
 else
-    disp("SYSTEM:ERROR?");
+    if(Command_Display_Enable == 1)
+        disp("SYSTEM:ERROR?");
+    end
     Error_Code = 10;
     fprintf("System expirenced error code: %d\nPlease correct This error befor continueing.\n\r", Error_Code);
     pause;
-    disp("*CLS");
+    if(Command_Display_Enable == 1)
+        disp("*CLS");
+    end
     disp("Error Cleared - Continue")
 end
 
@@ -87,30 +115,252 @@ disp("Initalizing Connection to Agilent N1996A CSA Spectrum Analyzer...");
 %N1996A_ADDR.Terminator = "LF";
      
     %Sig Gen Ident Check
-disp("*IDN?")
-fprintf("%s", "Test IDEN")
+if(Command_Display_Enable == 1)
+    disp("*IDN?")
+end
+fprintf("%s\n\r", "Test IDEN")
 
 disp("Testing Command Interface Connection...")
 pause(0.5)
 
-disp(":DISPLAY:ENABLE: OFF");
+if(Command_Display_Enable == 1)
+    disp(":DISPLAY:ENABLE: OFF");
+end
 pause(1)
-disp(":DISPLAY:ENABLE: ON");
+if(Command_Display_Enable == 1)
+    disp(":DISPLAY:ENABLE: ON");
+end
 pause(1)
-disp(":DISPLAY:ENABLE: OFF");
+if(Command_Display_Enable == 1)
+    disp(":DISPLAY:ENABLE: OFF");
+end
 pause(1)
-disp(":DISPLAY:ENABLE: ON");
+if(Command_Display_Enable == 1)
+    disp(":DISPLAY:ENABLE: ON");
+end
 
-Confirm_Commands_N1996A = input("Did the Agilent N1996A CSA Spectrum Analyzer display cycle OFF, ON, OFF, ON? [Y/N] ", "s");
+Confirm_Commands_N1996A = input("Did the Agilent N1996A CSA Spectrum Analyzer display cycle OFF -> ON -> OFF -> ON? [Y/N] ", "s");
 if(strcmp(Confirm_Commands_N1996A,"Y"))
-    disp("*RST")
+    if(Command_Display_Enable == 1)
+        disp("*RST")
+    end
     disp("Agilent N1996A CSA Spectrum Analyzer Reset to Factory Defaults.")
 else
-    disp("SYSTEM:ERROR?");
+    if(Command_Display_Enable == 1)
+        disp("SYSTEM:ERROR?");
+    end
     Error_Code = 11;
     fprintf("System expirenced error code: %d\nPlease correct This error befor continueing.\n\r", Error_Code);
     pause;
-    disp("*CLS");
+    if(Command_Display_Enable == 1)
+        disp("*CLS");
+    end
     disp("Error Cleared - Continue.")
 end
 
+pause(0.5)
+
+fprintf("\n\n")
+for i = 1:184
+    fprintf("-")
+end
+fprintf("\n\n")
+
+%% Main Testing Loop
+
+Range_Check = 0;
+
+if(Command_Display_Enable == 1)
+disp(":SWEEP:TYPE STEP");
+disp(":INSTRUMENT:SELECT SA");
+end
+
+disp("Please Ensure all connections are proper as detailed in 1.E - 4.1 to 4.3 of The Official Regime of Hardware and Software Characteristic and Integration Tests.")
+pause(1)
+disp("Press any key to continue.")
+pause
+clc;
+
+Ticks = input("Please indicate how many rotation ticks this test will be preformed across (1 - 73).\n");
+Start_Tick = input("Please indicate starting tick (0 mark is 0 tick, anti clockwise is positive, clockwise is negitive) (-36 - +36).\n");
+
+for ticks = 1:Ticks
+
+    if(Range_Check == 0)
+        fprintf("\nThis sweep contains %d test sets, indexed below.\nProvide the desired starting set and then ending set, by index value, to the following prompts.\n" + ...
+            "01: %d MHz - %d MHz\n" + ...
+            "02: %d MHz - %d MHz\n" + ...
+            "03: %d MHz - %d MHz\n" + ...
+            "04: %d MHz - %d MHz\n" + ...
+            "05: %d MHz - %d MHz\n" + ...
+            "06: %d MHz - %d MHz\n" + ...
+            "07: %d MHz - %d MHz\n" + ...
+            "08: %d MHz - %d MHz\n" + ...
+            "09: %d MHz - %d MHz\n" + ...
+            "10: %d MHz - %d MHz\n" + ...
+            "11: %d MHz - %d MHz\n" + ...
+            "12: %d MHz - %d MHz\n" + ...
+            "13: %d MHz - %d MHz\n" + ...
+            "14: %d MHz - %d MHz\n" + ...
+            "15: %d MHz - %d MHz\n" + ...
+            "16: %d MHz - %d MHz\n" + ...
+            "17: %d MHz - %d MHz\n" + ...
+            "18: %d MHz - %d MHz\n" + ...
+            "19: %d MHz - %d MHz\n" + ...
+            "20: %d MHz - %d MHz\n" + ...
+            "21: %d MHz - %d MHz\n" + ...
+            "22: %d MHz - %d MHz\n" + ...
+            "23: %d MHz - %d MHz\n" + ...
+            "24: %d MHz - %d MHz\n" + ...
+            "25: %d MHz - %d MHz\n\r", size(Full_Test_Set, 2), ...
+            Full_Test_Set(1,1), Full_Test_Set(2,1), ...
+            Full_Test_Set(1,2), Full_Test_Set(2,2), ...
+            Full_Test_Set(1,3), Full_Test_Set(2,3), ...
+            Full_Test_Set(1,4), Full_Test_Set(2,4), ...
+            Full_Test_Set(1,5), Full_Test_Set(2,5), ...
+            Full_Test_Set(1,6), Full_Test_Set(2,6), ...
+            Full_Test_Set(1,7), Full_Test_Set(2,7), ...
+            Full_Test_Set(1,8), Full_Test_Set(2,8), ...
+            Full_Test_Set(1,9), Full_Test_Set(2,9), ...
+            Full_Test_Set(1,10), Full_Test_Set(2,10), ...
+            Full_Test_Set(1,11), Full_Test_Set(2,11), ...
+            Full_Test_Set(1,12), Full_Test_Set(2,12), ...
+            Full_Test_Set(1,13), Full_Test_Set(2,13), ...
+            Full_Test_Set(1,14), Full_Test_Set(2,14), ...
+            Full_Test_Set(1,15), Full_Test_Set(2,15), ...
+            Full_Test_Set(1,16), Full_Test_Set(2,16), ...
+            Full_Test_Set(1,17), Full_Test_Set(2,17), ...
+            Full_Test_Set(1,18), Full_Test_Set(2,18), ...
+            Full_Test_Set(1,19), Full_Test_Set(2,19), ...
+            Full_Test_Set(1,20), Full_Test_Set(2,20), ...
+            Full_Test_Set(1,21), Full_Test_Set(2,21), ...
+            Full_Test_Set(1,22), Full_Test_Set(2,22), ...
+            Full_Test_Set(1,23), Full_Test_Set(2,23), ...
+            Full_Test_Set(1,24), Full_Test_Set(2,24), ...
+            Full_Test_Set(1,25), Full_Test_Set(2,25));
+        
+        Start_Set = input("Provide Starting Set Index:\n");
+        End_Set = input("Provide ending Set Index:\n");
+    
+        Range_Check = 1;
+    end
+
+    if(Range_Check == 1)
+        tic
+    end
+    
+    clc;
+    for sets = Start_Set:End_Set
+    
+        fprintf("\n\n")
+        for i = 1:184
+            fprintf("-")
+        end
+        fprintf("\n\n")
+
+        Sweep_Start = Full_Test_Set(1,sets);
+        Sweep_Stop = Full_Test_Set(2,sets);
+        RFGEN_Sweep_Points = ceil((Full_Test_Set(2,sets)-Full_Test_Set(1,sets))/Frequency_Resolution);
+        SPECAN_Sweep_Points = (Sweep_Stop - Sweep_Start)*2;
+    
+        if(SPECAN_Sweep_Points > 1000)
+            SPECAN_Sweep_Points = 1000;
+        end
+    
+        fprintf("Configuring Keysight N9310A RF Signal Generator for %d MHz to %d MHz: %d Point Sweep.\n\r", Sweep_Start, Sweep_Stop, RFGEN_Sweep_Points)
+    
+        if(Command_Display_Enable == 1)
+            RF_Sweep_Start_CMD = sprintf(":SWEEP:RF:START %d MHz", Sweep_Start);
+            disp(RF_Sweep_Start_CMD)
+        
+            RF_Sweep_Stop_CMD = sprintf(":SWEEP:RF:STOP %d MHz", Sweep_Stop);
+            disp(RF_Sweep_Stop_CMD)
+        
+            RF_Sweep_Points_CMD = sprintf(":SWEEP:STEP:POINTS %d", RFGEN_Sweep_Points);
+            disp(RF_Sweep_Points_CMD)
+        
+            RF_Sweep_Dwell_CMD = sprintf(":SWEEP:STEP:DWELL %d ms", Dwell_Time);
+            disp(RF_Sweep_Dwell_CMD)
+            disp(":SWEEP:STRG KEY")
+            disp(":SWEEP:PTRG KEY")
+        end
+
+        disp("Keysight N9310A RF Signal Generator configuration complete.")
+        
+        fprintf("Configuring Agilent N1996A CSA Spectrum Analyzer for %d MHz to %d MHz: %d Point Sweep.\n\r", Sweep_Start, Sweep_Stop, RFGEN_Sweep_Points)
+    
+        if(Command_Display_Enable == 1)
+            SPECAN_Sense_Frequency_Start_CMD = sprintf(":SENSE:FREQUENCY:START %d MHz", Sweep_Start);
+            disp(SPECAN_Sense_Frequency_Start_CMD)
+        
+            SPECAN_Sense_Frequency_Stop_CMD = sprintf(":SENSE:FREQUENCY:STOP %d MHz", Sweep_Stop);
+            disp(SPECAN_Sense_Frequency_Stop_CMD)
+        
+            SPECAN_Sense_Sweep_Points_CMD = sprintf(":SENSE:SWEEP:POINTS %d", SPECAN_Sweep_Points);
+            disp(SPECAN_Sense_Sweep_Points_CMD)
+        
+            SPECAN_Sweep_Avg_Count = sprintf(":SENSE:AVERAGE:COUNT %d", SPECAN_Average_Count);
+            disp(SPECAN_Sweep_Avg_Count)
+        
+            disp(":INITIATE:CONTINUOUS ON")
+        
+            disp(":SENSE:AVERAGE:TCONTROL REPEAT")
+        
+            disp(":AVERAGE:TYPE LOG")
+        end
+        disp("Agilent N1996A CSA Spectrum Analyzer configuration complete.")
+    
+        if(Command_Display_Enable == 1)
+            disp(":SWEEP:REPEAT CONTINUOUS")
+            disp(":RFOUTPUT:STATE ON")
+        end
+
+        disp("Disabling Display of Agilent N1996A CSA Spectrum Analyzer to increase processing speed.")
+        if(Command_Display_Enable == 1)
+            disp(":DISPLAY:ENABLE: OFF");
+        end
+
+        disp("Triggering Sweep Now...")
+        if(Command_Display_Enable == 1)
+            disp(":TRIGGER:IMMEDIATE")
+        end
+
+        pause(0)
+
+        if(Command_Display_Enable == 1)
+            Trace_Data_Query = sprintf(":TRACE:DATA? TRACE%d", Trace_Number);
+            disp(Trace_Data_Query)
+         %use ":CALCULATE:DATA?" instead?
+        end
+
+        disp("Data Writen to USB Drive and Transmited to this PC as .XML")
+        disp(":RFOUTPUT:STATE ON")
+    end
+    
+        fprintf("\n\n\n\n")
+        for i = 1:184
+            fprintf("-")
+        end
+        fprintf("\n")
+        for i = 1:184
+            fprintf("-")
+        end
+        fprintf("\n\n\n\n")
+
+    disp("Enabling Display of Agilent N1996A CSA Spectrum Analyzer to increase clarity.")
+    if(Command_Display_Enable == 1)
+        disp(":DISPLAY:ENABLE: ON");
+    end
+
+    Tick_Durration = ceil(toc);
+    disp("Please rotate the Locating Rig 1 tick anti clockwise");
+    fprintf("\nCurrent Tick: %d\nNext Tick: %d\nTicks Remaining: %d\n", (Start_Tick+ticks-1), (Start_Tick+ticks), Ticks-ticks);
+    fprintf("This dataset took %i seconds to collect.\n\n", Tick_Durration)
+    disp("Press any key to resume testing after the Locating Rig has been rotated.");
+    pause
+end
+
+clc;
+disp("Good work! That prolly sucked ass!")
+pause(5);
+disp("Shutting down Testing Rig. Good Morning...")
