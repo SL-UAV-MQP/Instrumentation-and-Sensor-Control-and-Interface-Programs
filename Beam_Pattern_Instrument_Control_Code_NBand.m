@@ -23,7 +23,7 @@ Band_Start_Last = Band_End_Last-Step_Over;
 Sets = floor((Band_End_Last-Band_End_First)/Step_Over);
 Full_Test_Range = [linspace(Band_Start_First,Band_Start_Last,Sets); linspace(Band_End_First,Band_End_Last,Sets)];
 
-save('Beampattern_Sweep_Storage.mat', 'Band_Start_First','Band_End_Last','Band_End_First','Band_Start_Last','Sets')
+save('Beampattern_Sweep_Storage.mat', 'Full_Test_Range')
 
 
 %% Initalization Step
@@ -135,7 +135,7 @@ RFGEN_Sweep_Points = Step_Over*Frequency_Resolution_GEN;
 SPECAN_Sweep_Points = RFGEN_Sweep_Points*Frequency_Resolution_SPEC;
 
 writeline(N9310A_ADDR, ":SWEEP:TYPE STEP");
-
+writeline(N9310A_ADDR, ":SYSTEM:REFERENCE:FREQUENCY INT10MHZ");
 writeline(N9310A_ADDR, ":AMPLITUDE:STOP 13 dBm");
 writeline(N9310A_ADDR, ":AMPLITUDE:START 12.9 dBm");
 writeline(N9310A_ADDR, ":AMPLitude:CW 20 dBm")
@@ -147,6 +147,8 @@ RF_Sweep_Dwell_CMD = sprintf(":SWEEP:STEP:DWELL %d ms", Dwell_Time);
 writeline(N9310A_ADDR, RF_Sweep_Dwell_CMD)
 
 writeline(N1996A_ADDR, ":INSTRUMENT:SELECT SA");
+writeline(N1996A_ADDR, ":SENSE:ROSCILLATOR:SOURCE EXTERNAL");
+writeline(N1996A_ADDR, ":SENSE:ROSCILLATOR:EXTERNAL:FREQUENCY 10MHz");
 writeline(N1996A_ADDR, ":SENSE:AVERAGE:TCONTROL EXPONENTIAL")
 writeline(N1996A_ADDR, ":AVERAGE:TYPE LOG")
 SPECAN_Sweep_Avg_Count = sprintf(":SENSE:AVERAGE:COUNT %d", SPECAN_Average_Count);
@@ -170,7 +172,7 @@ else
     clc;
     
     Ticks = input("Please indicate how many rotation ticks this test will be preformed across (1 - 73).\n");
-    Start_Tick = input("Please indicate starting tick (0 mark is 0 tick, anti clockwise is positive, clockwise is negitive) (-36 -> +36).\n");
+    Start_Tick = input("Please indicate starting tick (0 mark is 0 tick, anti clockwise is positive, clockwise is negitive) (0 -> 73).\n");
     save('Beampattern_Sweep_Storage.mat', 'Ticks', 'Start_Tick', '-append')
 end  
 
