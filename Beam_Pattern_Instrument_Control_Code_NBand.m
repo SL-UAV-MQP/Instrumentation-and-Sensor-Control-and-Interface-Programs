@@ -79,7 +79,7 @@ fprintf("\n\n")
 disp("Initalizing Connection to Agilent N1996A CSA Spectrum Analyzer");
 
 if(exist("N1996A_ADDR") == 0)
-    N1996A_ADDR = visadev("TCPIP0::192.168.1.2::inst0::INSTR");
+    N1996A_ADDR = visadev("N1996A_LAN");
 end
 N1996A_ADDR.Timeout = 5;
 configureTerminator(N1996A_ADDR,"LF")     
@@ -320,3 +320,4 @@ delete(N9310A_ADDR);
 delete(N1996A_ADDR);
 clear("N9310A_ADDR");
 clear("N1996A_ADDR");
+
