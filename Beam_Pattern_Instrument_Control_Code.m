@@ -1,3 +1,5 @@
+%%Deprecieated - Do Not Use
+
 clc; clear; close all;
 
 Unit = "MHz";
@@ -313,4 +315,5 @@ disp("Shutting down Testing Rig. Good Morning...")
 writelines(N1996A_ADDR, ":DISPLAY:ENABLE: ON");
 fclose(N9310A_ADDR);
 fclose(N1996A_ADDR);
+
 
