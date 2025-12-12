@@ -79,7 +79,7 @@ fprintf("\n\n")
 disp("Initalizing Connection to Agilent N1996A CSA Spectrum Analyzer");
 
 if(exist("N1996A_ADDR") == 0)
-    N1996A_ADDR = visadev("N1996A_LAN");
+    N1996A_ADDR = visadev("TCPIP0::192.168.1.2::inst0::INSTR");
 end
 N1996A_ADDR.Timeout = 5;
 configureTerminator(N1996A_ADDR,"LF")     
@@ -194,6 +194,7 @@ for frequencies = 1:size(Frequency_Sweep,1)
 end
 
 for ticks = 1:Ticks
+    Tick_Reset = ticks;
     if(DEV_DEFAULTS ~= 1)
         if(Range_Check == 0)
             fprintf("This sweep contains %d test sets, indexed below.\nProvide the desired starting set and then ending set, by index value, to the following prompts.\n",Sets);
@@ -302,11 +303,25 @@ for ticks = 1:Ticks
     end
 
     Tick_Durration = ceil(toc);
+    
+    Data_Good = input("Does the data look proper? Reset for missed samples. Escape to end testing early. [Y/R/E]\n");
+    if(strcmp(Data_Good, "R"))
+        ticks = Tick_Reset-1;
+    elseif(strcmp(Data_Good, "E"))
+        Final_Tick = ticks;
+        save('Beampattern_Sweep_Storage.mat', 'Final_Tick', '-append')
+        quit;
+    end
+    Final_Tick = ticks;
+
     disp("Please rotate the Locating Rig 1 tick anti clockwise");
     fprintf("\nCurrent Tick: %d\nNext Tick: %d\nTicks Remaining: %d\n", (Start_Tick+ticks), (Start_Tick+ticks)+1, Ticks-ticks);
     fprintf("This dataset took %i seconds to collect.\n\n", Tick_Durration)
     disp("Press any key to resume testing after the Locating Rig has been rotated.");
-    pause
+    save('Beampattern_Sweep_Storage.mat', 'Final_Tick', '-append')
+    if(DEV_DEFAULTS == 0)
+        pause
+    end
 end
 
 %% Shutdown! as if that will ever happen LOL
@@ -320,4 +335,3 @@ delete(N9310A_ADDR);
 delete(N1996A_ADDR);
 clear("N9310A_ADDR");
 clear("N1996A_ADDR");
-
