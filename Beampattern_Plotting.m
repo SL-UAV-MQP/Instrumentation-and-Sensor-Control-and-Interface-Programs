@@ -1,6 +1,11 @@
 clear; clc; close all;
 load("Beampattern_Sweep_Storage_Full.mat")
 
+warning('off','MATLAB:audiovideo:VideoWriter:mp4FramePadded');
+v = VideoWriter('Beam_Pattern_Video','MPEG-4');
+v.Quality = 100;
+open(v);
+
 Beam_Sweep = Beampattern_Sweep_Storage(2:end,:);
 
 
@@ -18,9 +23,9 @@ for directions = 1:size(Beam_Sweep,2)
 end
 
     %make plot of raw Beam Pattern pulled from Direction array
-figure(1)
-hold on;
-plot(Direction{1,1}, Direction{1,2})
+%figure(1)
+%hold on;
+%plot(Direction{1,1}, Direction{1,2})
 
     %preform first clean up routine
 for clean1 = 2:size(Beam_Sweep,2)
@@ -39,7 +44,7 @@ for clean1 = 2:size(Beam_Sweep,2)
 end 
 
     %Plot the points after their first cleaning operation
-scatter(Direction_Clean1{1,1}, Direction_Clean1{2,1},'o','red')
+%scatter(Direction_Clean1{1,1}, Direction_Clean1{2,1},'o','red')
 
     %preform the second cleaning operation
 for clean2 = 1:(size(Beam_Sweep,2)-1)
@@ -54,8 +59,8 @@ for clean2 = 1:(size(Beam_Sweep,2)-1)
 end 
 
     %plot the fully cleaned data
-scatter(Direction_Clean2{1,1}, Direction_Clean2{2,1},'.','k')
-hold off
+%scatter(Direction_Clean2{1,1}, Direction_Clean2{2,1},'.','k')
+%hold off
 
 % figure(2)
 % hold on
@@ -94,11 +99,11 @@ end
 
 % Prepare the figure for polar plotting%plot each of the beam patterns by
 % frequency incrementing ev ery 0.1s
-figure(3)
-hold on
+pax = polaraxes; 
 for frequencies = 1:Minimum_Points
-    polarplot(deg2rad(Beam_Patterns{1,frequencies}-180),Beam_Patterns{2,frequencies});
+    polarplot(pax, deg2rad(Beam_Patterns{1,frequencies}-180),Beam_Patterns{2,frequencies});
     rlim([-40 -15])
     legend(sprintf("Frequency: %.0f MHz\n", Direction_Clean2{1,1}(frequencies)))
-    pause(0.1)
+    writeVideo(v,getframe(gcf));
 end
+close(v);
