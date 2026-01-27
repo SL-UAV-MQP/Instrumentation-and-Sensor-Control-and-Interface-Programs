@@ -204,7 +204,7 @@ for ticks = 1:Ticks
             end
             
             Start_Set = input("Provide Starting Set Index:\n");
-            End_Set = input("Provide ending Set Index:\n\n");
+            End_Set = input("Provide ending Set Index:\n");
         
             Range_Check = 1;
             clc;
@@ -256,6 +256,10 @@ for ticks = 1:Ticks
         writeline(N1996A_ADDR,":INITIATE:CONTINUOUS ON")
 
         pause(3)
+
+        if(sets == Start_Set)
+            pause(3)
+        end
     
         fprintf("Agilent N1996A CSA Spectrum Analyzer configuration complete.\n\n");
     
@@ -289,7 +293,7 @@ for ticks = 1:Ticks
         
         if(DEV_DEFAULTS == 0)
             figure(1)
-            plot(Frequency_Sweep(1,1:(end-1)),Beampattern_Sweep_Storage(2:end,ticks+1))
+            plot(Frequency_Sweep(1:end,1),Beampattern_Sweep_Storage(2:end,ticks+1))
         end
 
         writeline(N9310A_ADDR, ":RFOUTPUT:STATE OFF");
@@ -299,15 +303,19 @@ for ticks = 1:Ticks
 
     if(DEV_DEFAULTS == 0)
         disp("Enabling Display of Agilent N1996A CSA Spectrum Analyzer to increase clarity.")
-        writeline(N1996A_sADDR, ":DISPLAY:ENABLE ON");
+        writeline(N1996A_ADDR, ":DISPLAY:ENABLE ON");
     end
 
     Tick_Durration = ceil(toc);
     
     Data_Good = input("Does the data look proper? Reset for missed samples. Escape to end testing early. [Y/R/E]\n");
-    if(strcmp(Data_Good, "R"))
+    if(strcmp(Data_Good, 'Y'))
+        disp("Continuting to next test set.")
+    elseif(strcmp(Data_Good, 'R'))
+        disp("Restarting Previous test set.")
         ticks = Tick_Reset-1;
-    elseif(strcmp(Data_Good, "E"))
+    elseif(strcmp(Data_Good, 'E'))
+        disp("Exiting Testing Preamaturely.")
         Final_Tick = ticks;
         save('Beampattern_Sweep_Storage.mat', 'Final_Tick', '-append')
         quit;
@@ -329,6 +337,37 @@ end
 disp("Good work! That prolly sucked ass!")
 pause(5);
 disp("Shutting down Testing Rig. Good Morning...")
+
+Test_Run = 0;
+Full_Test = sprintf("Beampattern_Sweep_Full_Run_%d.mat", Test_Run)
+while(isfile(Full_Test) == 1)
+    Test_Run = Test_Run+1
+    Full_Test = sprintf("Beampattern_Sweep_Full_Run_%d.mat", Test_Run)
+end
+
+save(Full_Test,...
+        "DEV_DEFAULTS",...
+        "Unit",...
+        "Componant",...
+        "Dwell_Time",...
+        "Frequency_Resolution_GEN",...
+        "Frequency_Resolution_SPEC",...
+        "SPECAN_Average_Count",...
+        "Trace_Number",...
+        "Step_Over",...
+        "Band_Start_First",...
+        "Band_End_Last",...
+        "Sets",...
+        "Full_Test_Range",...
+        "Operational_Power",...
+        "RFGEN_Sweep_Points",...
+        "SPECAN_Sweep_Points",...
+        "Ticks",...
+        "Start_Tick",...
+        "Start_Set",...
+        "End_Set",...
+        "Beampattern_Sweep_Storage"...
+    )
 
 writelines(N1996A_ADDR, ":DISPLAY:ENABLE: ON");
 delete(N9310A_ADDR);
